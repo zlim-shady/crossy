@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inverted Crossy Road</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="score-display">
+            <div class="distance-display">Distance: <span id="distance">0</span>m</div>
+            <div class="score-value">Score: <span id="score">0</span></div>
+        </div>
+
+        <div class="canvas-wrapper">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div id="gameMessage" class="game-message">
+                <div class="message-content">
+                    <h1>Inverted Crossy Road</h1>
+                    <p>Press <strong>SPACE</strong> to Start</p>
+                    <div class="controls">
+                        <p><strong>↑</strong> Move Forward</p>
+                        <p><strong>←→</strong> Change Lanes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
