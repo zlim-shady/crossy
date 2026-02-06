@@ -197,6 +197,77 @@ body.rain-mode::before {
     background: rgba(59, 130, 246, 1);
 }
 
+/* Mobile menu button row */
+.menu-buttons-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 25px;
+}
+
+.icon-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.icon-btn-square {
+    padding: 14px 16px;
+    font-size: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn-square:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.trophy-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.start-btn {
+    padding: 14px 40px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    background: rgba(247, 0, 36, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.start-btn:active {
+    transform: scale(0.95);
+    background: rgba(247, 0, 36, 1);
+}
+
 /* Floating rain toggle button - hidden by default, shown on touch devices */
 .rain-toggle-btn {
     display: none;
@@ -305,6 +376,37 @@ body.rain-mode .rain-toggle-btn {
     color: #f70024;
 }
 
+/* Two-column leaderboard for mobile */
+.leaderboard-columns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.leaderboard-columns .leaderboard-list {
+    flex: 1;
+    min-width: 0;
+}
+
+.leaderboard-columns .leaderboard-entry {
+    font-size: 12px;
+    padding: 4px 0;
+}
+
+.leaderboard-columns .leaderboard-entry .rank {
+    width: 25px;
+}
+
+.leaderboard-columns .leaderboard-entry .name {
+    width: 40px;
+}
+
+.leaderboard-columns .leaderboard-entry .score {
+    color: #888;
+    text-align: right;
+    flex-grow: 1;
+}
+
 /* Name Input Container */
 .name-input-container {
     text-align: center;
@@ -359,6 +461,36 @@ body.rain-mode .rain-toggle-btn {
     color: #f70024;
 }
 
+/* Native input for mobile name entry */
+.name-input-native {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 36px;
+    font-weight: 700;
+    color: #f70024;
+    text-align: center;
+    letter-spacing: 8px;
+    padding: 15px 25px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    width: 150px;
+    text-transform: uppercase;
+}
+
+.name-input-native:focus {
+    outline: none;
+    border-color: #f70024;
+}
+
+.name-input-native::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.submit-btn {
+    display: block;
+    margin: 15px auto 0;
+}
+
 /* Blinking cursor effect for name input */
 @keyframes blink {
     0%, 50% { opacity: 1; }
@@ -396,50 +528,6 @@ html, body {
     overscroll-behavior: none;
 }
 
-/* ===== TOUCH KEYBOARD FOR NAME INPUT ===== */
-.touch-keyboard {
-    margin-top: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center;
-}
-
-.keyboard-row {
-    display: flex;
-    gap: 4px;
-    justify-content: center;
-}
-
-.key-btn {
-    min-width: 32px;
-    min-height: 44px;
-    padding: 8px 10px;
-    font-family: 'Nunito', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    color: white;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.1s ease;
-}
-
-.key-btn:active {
-    background: rgba(247, 0, 36, 0.6);
-    transform: scale(0.95);
-}
-
-.key-special {
-    min-width: 50px;
-    background: rgba(100, 100, 100, 0.3);
-}
-
-.key-enter {
-    background: rgba(247, 0, 36, 0.6);
-    min-width: 60px;
-}
 
 /* ===== RESPONSIVE STYLES ===== */
 @media (max-width: 840px) {
@@ -522,6 +610,15 @@ html, body {
         margin-top: 4px;
     }
 
+    .leaderboard-columns {
+        gap: 8px;
+    }
+
+    .leaderboard-columns .leaderboard-entry {
+        font-size: 11px;
+        padding: 3px 0;
+    }
+
     /* Name input mobile adjustments */
     .name-input-container h1 {
         font-size: 24px;
@@ -542,6 +639,185 @@ html, body {
 
     .input-hint {
         font-size: 12px;
+    }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    body {
+        padding: 5px;
+    }
+
+    .game-container {
+        flex-direction: row;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .score-display {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 5px 15px;
+        font-size: 12px;
+        gap: 15px;
+        z-index: 10;
+    }
+
+    .canvas-wrapper {
+        height: calc(100vh - 20px);
+        width: auto;
+        max-width: none;
+    }
+
+    #gameCanvas {
+        width: auto;
+        height: 100%;
+        max-height: calc(100vh - 20px);
+    }
+
+    .game-message {
+        overflow-y: auto;
+    }
+
+    .message-content {
+        padding: 10px 15px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+    }
+
+    .message-content h1 {
+        font-size: 18px;
+        margin-bottom: 5px;
+    }
+
+    .message-content p {
+        font-size: 11px;
+        margin: 2px 0;
+    }
+
+    .controls {
+        margin-top: 6px;
+        padding-top: 6px;
+    }
+
+    .controls p {
+        font-size: 10px;
+        margin: 1px 0;
+    }
+
+    .menu-buttons-row {
+        margin-top: 8px;
+        gap: 8px;
+    }
+
+    .icon-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    .icon-btn-square {
+        padding: 10px 12px;
+        font-size: 16px;
+    }
+
+    .trophy-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .start-btn {
+        padding: 10px 25px;
+        font-size: 14px;
+    }
+
+    .leaderboard-btn {
+        padding: 8px 16px;
+        font-size: 12px;
+        margin-top: 10px;
+    }
+
+    /* Leaderboard in landscape */
+    .leaderboard-container h1 {
+        font-size: 16px;
+        margin-bottom: 2px;
+    }
+
+    .leaderboard-type {
+        font-size: 8px;
+        margin-bottom: 3px;
+    }
+
+    .leaderboard-list {
+        padding: 2px 8px;
+        margin-bottom: 4px;
+    }
+
+    .leaderboard-entry {
+        font-size: 10px;
+        padding: 1px 0;
+    }
+
+    .leaderboard-hint {
+        font-size: 9px;
+        margin-top: 3px;
+    }
+
+    .leaderboard-columns {
+        gap: 6px;
+    }
+
+    .leaderboard-columns .leaderboard-entry {
+        font-size: 9px;
+        padding: 1px 0;
+    }
+
+    .leaderboard-columns .leaderboard-entry .rank {
+        width: 20px;
+    }
+
+    .leaderboard-columns .leaderboard-entry .name {
+        width: 35px;
+    }
+
+    /* Name input in landscape */
+    .name-input-container h1 {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+
+    .name-input-container .your-score,
+    .name-input-container .your-rank {
+        font-size: 12px;
+        margin: 3px 0;
+    }
+
+    .name-input-container .enter-initials {
+        font-size: 11px;
+        margin-bottom: 5px;
+    }
+
+    .name-input-native {
+        font-size: 24px;
+        padding: 8px 15px;
+        width: 120px;
+    }
+
+    .submit-btn {
+        margin-top: 8px;
+        padding: 8px 20px;
+        font-size: 12px;
+    }
+
+    /* Rain toggle button */
+    .rain-toggle-btn {
+        top: 5px;
+        right: 5px;
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
     }
 }
 

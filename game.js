@@ -121,8 +121,8 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
-    // Handle ESC key for returning from leaderboard
-    if (e.code === 'Escape') {
+    // Handle ESC or SPACE key for returning from leaderboard
+    if (e.code === 'Escape' || (e.code === 'Space' && currentState === GameState.LEADERBOARD)) {
         e.preventDefault();
         if (currentState === GameState.LEADERBOARD) {
             setState(previousState);
@@ -174,6 +174,11 @@ function setupTouchHandlers() {
 }
 
 function handleTouchStart(e) {
+    // Allow button/input clicks to work normally
+    const target = e.target;
+    if (target.tagName === 'BUTTON' || target.tagName === 'INPUT') {
+        return; // Don't prevent default for buttons/inputs
+    }
     e.preventDefault();
     const touch = e.touches[0];
     touchStartX = touch.clientX;
@@ -182,10 +187,20 @@ function handleTouchStart(e) {
 }
 
 function handleTouchMove(e) {
+    // Allow input interactions to work normally
+    const target = e.target;
+    if (target.tagName === 'INPUT') {
+        return;
+    }
     e.preventDefault(); // Prevent scrolling during gameplay
 }
 
 function handleTouchEnd(e) {
+    // Allow button/input clicks to work normally
+    const target = e.target;
+    if (target.tagName === 'BUTTON' || target.tagName === 'INPUT') {
+        return; // Don't prevent default for buttons/inputs
+    }
     e.preventDefault();
     const touch = e.changedTouches[0];
     const deltaX = touch.clientX - touchStartX;
@@ -197,6 +212,20 @@ function handleTouchEnd(e) {
     const isTap = Math.abs(deltaX) < threshold && Math.abs(deltaY) < threshold;
 
     if (isTap) {
+        // Check if tap was outside message content box (for leaderboard dismiss)
+        if (currentState === GameState.LEADERBOARD) {
+            const messageContent = document.querySelector('.message-content');
+            if (messageContent) {
+                const rect = messageContent.getBoundingClientRect();
+                const tapX = touch.clientX;
+                const tapY = touch.clientY;
+                // If tap is outside the content box, go back
+                if (tapX < rect.left || tapX > rect.right || tapY < rect.top || tapY > rect.bottom) {
+                    setState(previousState);
+                    return;
+                }
+            }
+        }
         handleTap();
     } else if (Math.abs(deltaX) > Math.abs(deltaY)) {
         // Horizontal swipe
@@ -369,14 +398,15 @@ function setState(newState) {
             if (isTouchDevice) {
                 messageContent.innerHTML = `
                     <h1>Inverted Crossy Road</h1>
-                    <p><strong>TAP</strong> to Start</p>
                     <div class="controls">
                         <p><strong>Tap</strong> Move Forward</p>
                         <p><strong>Swipe ←→</strong> Change Lanes</p>
                         <p><strong>Swipe ↓</strong> Move Backward</p>
-                        <p><strong>🌧️</strong> Toggle Rain</p>
                     </div>
-                    <button class="leaderboard-btn" onclick="handleLeaderboardKey()">LEADERBOARD</button>
+                    <div class="menu-buttons-row">
+                        <button class="start-btn" onclick="handleSpacePress()">START</button>
+                        <button class="icon-btn-square" onclick="handleLeaderboardKey()"><img src="assets/trophy.png" alt="Leaderboard" class="trophy-icon"></button>
+                    </div>
                 `;
             } else {
                 messageContent.innerHTML = `
@@ -401,8 +431,10 @@ function setState(newState) {
                     <h1>Game Over!</h1>
                     <p>Final Score: <strong>${score}</strong></p>
                     <p>Distance: <strong>${distance}m</strong></p>
-                    <p style="margin-top: 30px;"><strong>TAP</strong> to Restart</p>
-                    <button class="leaderboard-btn" onclick="handleLeaderboardKey()">LEADERBOARD</button>
+                    <div class="menu-buttons-row">
+                        <button class="start-btn" onclick="handleSpacePress()">RESTART</button>
+                        <button class="icon-btn-square" onclick="handleLeaderboardKey()"><img src="assets/trophy.png" alt="Leaderboard" class="trophy-icon"></button>
+                    </div>
                 `;
             } else {
                 messageContent.innerHTML = `
@@ -421,6 +453,13 @@ function setState(newState) {
         case GameState.NAME_INPUT:
             messageEl.classList.remove('hidden');
             messageContent.innerHTML = renderNameInputHTML();
+            // Auto-focus the input on mobile
+            if (isTouchDevice) {
+                setTimeout(() => {
+                    const input = document.getElementById('name-input-field');
+                    if (input) input.focus();
+                }, 100);
+            }
             break;
     }
 }
@@ -638,23 +677,47 @@ function renderLeaderboardHTML() {
     } else {
         html += '<p class="leaderboard-type">LOCAL SCORES</p>';
     }
-    html += '<div class="leaderboard-list">';
 
-    for (const entry of leaderboard) {
-        const rankStr = entry.rank.toString().padStart(2, ' ');
-        const scoreFormatted = formatScoreWithDots(entry.score, 8);
-        html += `<div class="leaderboard-entry">
-            <span class="rank">${rankStr}.</span>
-            <span class="name">${entry.name}</span>
-            <span class="dots">${scoreFormatted}</span>
-        </div>`;
-    }
-
-    html += '</div>';
     if (isTouchDevice) {
-        html += '<p class="leaderboard-hint"><strong>TAP</strong> to go back</p>';
+        // Two-column layout for mobile
+        html += '<div class="leaderboard-columns">';
+        html += '<div class="leaderboard-list">';
+        for (let i = 0; i < 5; i++) {
+            const entry = leaderboard[i];
+            const rankStr = entry.rank.toString();
+            html += `<div class="leaderboard-entry">
+                <span class="rank">${rankStr}.</span>
+                <span class="name">${entry.name}</span>
+                <span class="score">${entry.score}</span>
+            </div>`;
+        }
+        html += '</div>';
+        html += '<div class="leaderboard-list">';
+        for (let i = 5; i < 10; i++) {
+            const entry = leaderboard[i];
+            const rankStr = entry.rank.toString();
+            html += `<div class="leaderboard-entry">
+                <span class="rank">${rankStr}.</span>
+                <span class="name">${entry.name}</span>
+                <span class="score">${entry.score}</span>
+            </div>`;
+        }
+        html += '</div>';
+        html += '</div>';
+        html += '<p class="leaderboard-hint">Tap outside to go back</p>';
     } else {
-        html += '<p class="leaderboard-hint">Press <strong>W</strong> or <strong>ESC</strong> to go back</p>';
+        html += '<div class="leaderboard-list">';
+        for (const entry of leaderboard) {
+            const rankStr = entry.rank.toString().padStart(2, ' ');
+            const scoreFormatted = formatScoreWithDots(entry.score, 8);
+            html += `<div class="leaderboard-entry">
+                <span class="rank">${rankStr}.</span>
+                <span class="name">${entry.name}</span>
+                <span class="dots">${scoreFormatted}</span>
+            </div>`;
+        }
+        html += '</div>';
+        html += '<p class="leaderboard-hint">Press <strong>SPACE</strong>, <strong>W</strong>, or <strong>ESC</strong> to go back</p>';
     }
     html += '</div>';
     return html;
@@ -669,24 +732,9 @@ function renderNameInputHTML() {
     html += '<p class="enter-initials">ENTER YOUR INITIALS:</p>';
 
     if (isTouchDevice) {
-        // Show on-screen keyboard buttons for mobile
-        html += `<div class="name-input">[ <span class="name-chars">${displayName}</span> ]</div>`;
-        html += '<div class="touch-keyboard">';
-        const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
-        rows.forEach(row => {
-            html += '<div class="keyboard-row">';
-            row.split('').forEach(letter => {
-                html += `<button class="key-btn" onclick="handleTouchKeyPress('${letter}')">${letter}</button>`;
-            });
-            html += '</div>';
-        });
-        html += '<div class="keyboard-row">';
-        html += '<button class="key-btn key-special" onclick="handleTouchBackspace()">DEL</button>';
-        if (playerNameInput.length === 3) {
-            html += '<button class="key-btn key-special key-enter" onclick="handleTouchEnter()">OK</button>';
-        }
-        html += '</div>';
-        html += '</div>';
+        // Use native input for mobile keyboard
+        html += `<input type="text" id="name-input-field" class="name-input-native" maxlength="3" autocomplete="off" autocapitalize="characters" pattern="[A-Za-z]*" value="${playerNameInput}" placeholder="___">`;
+        html += `<button class="leaderboard-btn submit-btn" onclick="submitMobileName()">SUBMIT</button>`;
     } else {
         html += `<div class="name-input">[ <span class="name-chars">${displayName}</span> ]</div>`;
         if (playerNameInput.length < 3) {
@@ -698,6 +746,21 @@ function renderNameInputHTML() {
 
     html += '</div>';
     return html;
+}
+
+function submitMobileName() {
+    const input = document.getElementById('name-input-field');
+    if (input) {
+        const name = input.value.toUpperCase().replace(/[^A-Z]/g, '');
+        if (name.length === 3) {
+            insertHighScore(name, score, playerRank);
+            playerNameInput = '';
+            setState(GameState.LEADERBOARD);
+        } else {
+            // Shake or indicate error - need 3 letters
+            input.focus();
+        }
+    }
 }
 
 // ===== SPAWN FUNCTIONS =====
