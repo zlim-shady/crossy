@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Inverted Crossy Road</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,6 +12,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <video muted loop playsinline id="bg-video">
+        <source src="assets/crossy-background.mp4" type="video/mp4">
+    </video>
     <div class="game-container">
         <div class="score-display">
             <div class="distance-display">Distance: <span id="distance">0</span>m</div>
@@ -21,14 +26,11 @@
             <div id="gameMessage" class="game-message">
                 <div class="message-content">
                     <h1>Inverted Crossy Road</h1>
-                    <p>Press <strong>SPACE</strong> to Start</p>
-                    <div class="controls">
-                        <p><strong>↑</strong> Move Forward</p>
-                        <p><strong>←→</strong> Change Lanes</p>
-                    </div>
+                    <p>Loading...</p>
                 </div>
             </div>
         </div>
+        <button id="rain-toggle" class="rain-toggle-btn" onclick="toggleRainMode()">🌧️</button>
     </div>
 
     <!-- Firebase SDK -->

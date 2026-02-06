@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Nunito', sans-serif;
-    background: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15)), url('assets/background.png') no-repeat center center;
+    background: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15)), url('assets/crossy-background.jpg') no-repeat center center;
     background-size: cover;
     background-color: #1a1a2e;
     min-height: 100vh;
@@ -14,6 +14,49 @@ body {
     justify-content: center;
     align-items: center;
     color: #333;
+    overflow: hidden;
+}
+
+#bg-video {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    z-index: -2;
+    object-fit: cover;
+    display: none;
+}
+
+/* Show video when rain mode is active */
+body.rain-mode #bg-video {
+    display: block;
+}
+
+/* Hide static background when rain mode is active */
+body.rain-mode {
+    background: #1a1a2e;
+}
+
+/* Dark overlay on top of video for better contrast */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+body.rain-mode::before {
+    opacity: 1;
 }
 
 .game-container {
@@ -133,40 +176,96 @@ body {
     transform: scale(1.05);
 }
 
+/* Menu buttons container */
+.menu-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 25px;
+}
+
+.menu-buttons .leaderboard-btn {
+    margin-top: 0;
+}
+
+.rain-btn {
+    background: rgba(59, 130, 246, 0.8);
+}
+
+.rain-btn:hover {
+    background: rgba(59, 130, 246, 1);
+}
+
+/* Floating rain toggle button - hidden by default, shown on touch devices */
+.rain-toggle-btn {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.2s ease;
+}
+
+.rain-toggle-btn:active {
+    transform: scale(0.95);
+    background: rgba(59, 130, 246, 0.8);
+}
+
+/* Show on touch devices */
+.touch-device .rain-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Active state when rain mode is on */
+body.rain-mode .rain-toggle-btn {
+    background: rgba(59, 130, 246, 0.8);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
 /* Leaderboard Container */
 .leaderboard-container {
     text-align: center;
 }
 
 .leaderboard-container h1 {
-    font-size: 36px;
-    margin-bottom: 10px;
+    font-size: 32px;
+    margin-bottom: 5px;
     color: #f70024;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .leaderboard-type {
-    font-size: 12px;
+    font-size: 11px;
     color: #4ade80;
     text-transform: uppercase;
     letter-spacing: 2px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .leaderboard-list {
     background: rgba(0, 0, 0, 0.3);
     border-radius: 10px;
-    padding: 15px 20px;
-    margin-bottom: 20px;
+    padding: 8px 20px;
+    margin-bottom: 15px;
 }
 
 .leaderboard-entry {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 4px 0;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 18px;
+    font-size: 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -197,9 +296,9 @@ body {
 }
 
 .leaderboard-hint {
-    font-size: 16px;
+    font-size: 14px;
     color: #aaa;
-    margin-top: 15px;
+    margin-top: 10px;
 }
 
 .leaderboard-hint strong {
@@ -281,4 +380,247 @@ body {
     height: 30px;
     background: #f70024;
     animation: blink 1s infinite;
+}
+
+/* ===== MOBILE / TOUCH DEVICE STYLES ===== */
+
+/* Prevent text selection and callouts on touch */
+.touch-device {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Prevent pull-to-refresh and overscroll */
+html, body {
+    overscroll-behavior: none;
+}
+
+/* ===== TOUCH KEYBOARD FOR NAME INPUT ===== */
+.touch-keyboard {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.keyboard-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.key-btn {
+    min-width: 32px;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.key-btn:active {
+    background: rgba(247, 0, 36, 0.6);
+    transform: scale(0.95);
+}
+
+.key-special {
+    min-width: 50px;
+    background: rgba(100, 100, 100, 0.3);
+}
+
+.key-enter {
+    background: rgba(247, 0, 36, 0.6);
+    min-width: 60px;
+}
+
+/* ===== RESPONSIVE STYLES ===== */
+@media (max-width: 840px) {
+    body {
+        padding: 10px;
+        padding-top: env(safe-area-inset-top, 10px);
+        padding-bottom: env(safe-area-inset-bottom, 10px);
+    }
+
+    .game-container {
+        gap: 10px;
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    .score-display {
+        gap: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+    }
+
+    .canvas-wrapper {
+        width: 100%;
+        max-width: calc(100vw - 20px);
+    }
+
+    #gameCanvas {
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+        border-width: 2px;
+    }
+
+    .message-content {
+        padding: 15px 20px;
+    }
+
+    .message-content h1 {
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+
+    .message-content p {
+        font-size: 16px;
+    }
+
+    .controls p {
+        font-size: 13px;
+    }
+
+    .leaderboard-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+        min-height: 44px;
+    }
+
+    /* Leaderboard mobile adjustments */
+    .leaderboard-container h1 {
+        font-size: 22px;
+        margin-bottom: 2px;
+    }
+
+    .leaderboard-type {
+        font-size: 9px;
+        margin-bottom: 4px;
+    }
+
+    .leaderboard-list {
+        padding: 4px 10px;
+        margin-bottom: 6px;
+    }
+
+    .leaderboard-entry {
+        font-size: 12px;
+        padding: 2px 0;
+    }
+
+    .leaderboard-hint {
+        font-size: 11px;
+        margin-top: 4px;
+    }
+
+    /* Name input mobile adjustments */
+    .name-input-container h1 {
+        font-size: 24px;
+    }
+
+    .name-input-container .your-score {
+        font-size: 20px;
+    }
+
+    .name-input-container .your-rank {
+        font-size: 16px;
+    }
+
+    .name-input {
+        font-size: 28px;
+        padding: 12px 20px;
+    }
+
+    .input-hint {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .score-display {
+        gap: 15px;
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+
+    .message-content {
+        padding: 10px 15px;
+    }
+
+    .message-content h1 {
+        font-size: 20px;
+        margin-bottom: 8px;
+    }
+
+    .message-content p {
+        font-size: 14px;
+        margin: 6px 0;
+    }
+
+    .controls {
+        margin-top: 15px;
+        padding-top: 10px;
+    }
+
+    .controls p {
+        font-size: 12px;
+        margin: 4px 0;
+    }
+
+    .leaderboard-btn {
+        margin-top: 15px;
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+
+    .leaderboard-container h1 {
+        font-size: 18px;
+        margin-bottom: 1px;
+    }
+
+    .leaderboard-type {
+        font-size: 8px;
+        margin-bottom: 3px;
+    }
+
+    .leaderboard-list {
+        padding: 3px 8px;
+        margin-bottom: 4px;
+    }
+
+    .leaderboard-entry {
+        font-size: 11px;
+        padding: 1px 0;
+    }
+
+    .leaderboard-entry .rank {
+        width: 30px;
+    }
+
+    .leaderboard-entry .name {
+        width: 50px;
+    }
+
+    .leaderboard-hint {
+        font-size: 10px;
+        margin-top: 3px;
+    }
+
+    .name-input-container h1 {
+        font-size: 16px;
+    }
+
+    .name-input {
+        font-size: 20px;
+        padding: 8px 15px;
+    }
 }

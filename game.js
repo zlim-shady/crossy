@@ -86,16 +86,34 @@ let keys = {
     Space: false
 };
 
+// ===== TOUCH DEVICE DETECTION =====
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+// ===== RAIN MODE (VIDEO BACKGROUND) =====
+let rainMode = false;
+
 // ===== CANVAS SETUP =====
 function setupCanvas() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
+
+    // Add touch-device class for CSS styling
+    if (isTouchDevice) {
+        document.body.classList.add('touch-device');
+    }
 }
 
 // ===== INPUT HANDLERS =====
 document.addEventListener('keydown', (e) => {
+    // Handle rain mode toggle (R key)
+    if (e.code === 'KeyR') {
+        e.preventDefault();
+        toggleRainMode();
+        return;
+    }
+
     // Handle leaderboard shortcut (W key)
     if (e.code === 'KeyW') {
         e.preventDefault();
@@ -136,6 +154,157 @@ document.addEventListener('keyup', (e) => {
         keys[e.code] = false;
     }
 });
+
+// ===== TOUCH EVENT HANDLERS =====
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
+
+function setupTouchHandlers() {
+    if (!isTouchDevice) return;
+
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    // Also handle touches on the game message overlay for menu/game over
+    const gameMessage = document.getElementById('gameMessage');
+    gameMessage.addEventListener('touchstart', handleTouchStart, { passive: false });
+    gameMessage.addEventListener('touchend', handleTouchEnd, { passive: false });
+}
+
+function handleTouchStart(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchStartTime = Date.now();
+}
+
+function handleTouchMove(e) {
+    e.preventDefault(); // Prevent scrolling during gameplay
+}
+
+function handleTouchEnd(e) {
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+    const deltaTime = Date.now() - touchStartTime;
+    const threshold = 30; // Minimum swipe distance in pixels
+
+    // Determine if it's a tap or swipe
+    const isTap = Math.abs(deltaX) < threshold && Math.abs(deltaY) < threshold;
+
+    if (isTap) {
+        handleTap();
+    } else if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Horizontal swipe
+        if (deltaX > 0) {
+            handleSwipeRight();
+        } else {
+            handleSwipeLeft();
+        }
+    } else {
+        // Vertical swipe
+        if (deltaY > 0) {
+            handleSwipeDown();
+        } else {
+            handleSwipeUp();
+        }
+    }
+}
+
+function handleTap() {
+    if (currentState === GameState.MENU || currentState === GameState.GAME_OVER) {
+        // Start or restart game
+        handleSpacePress();
+    } else if (currentState === GameState.PLAYING) {
+        // Move forward
+        simulateKeyPress('ArrowUp');
+    } else if (currentState === GameState.LEADERBOARD) {
+        // Return from leaderboard
+        setState(previousState);
+    }
+}
+
+function handleSwipeUp() {
+    if (currentState === GameState.PLAYING) {
+        simulateKeyPress('ArrowUp');
+    }
+}
+
+function handleSwipeDown() {
+    if (currentState === GameState.PLAYING) {
+        simulateKeyPress('ArrowDown');
+    }
+}
+
+function handleSwipeLeft() {
+    if (currentState === GameState.PLAYING) {
+        simulateKeyPress('ArrowLeft');
+    }
+}
+
+function handleSwipeRight() {
+    if (currentState === GameState.PLAYING) {
+        simulateKeyPress('ArrowRight');
+    }
+}
+
+function simulateKeyPress(keyCode) {
+    const currentTime = Date.now();
+    if (currentTime - lastMoveTime > MOVE_COOLDOWN) {
+        // Temporarily set key as pressed to trigger movement in update()
+        keys[keyCode] = true;
+        // Reset after a short delay
+        setTimeout(() => {
+            keys[keyCode] = false;
+        }, 50);
+    }
+}
+
+// Touch keyboard handlers for name input
+function handleTouchKeyPress(letter) {
+    if (currentState === GameState.NAME_INPUT && playerNameInput.length < 3) {
+        playerNameInput += letter;
+        updateNameInputDisplay();
+    }
+}
+
+function handleTouchBackspace() {
+    if (currentState === GameState.NAME_INPUT && playerNameInput.length > 0) {
+        playerNameInput = playerNameInput.slice(0, -1);
+        updateNameInputDisplay();
+    }
+}
+
+function handleTouchEnter() {
+    if (currentState === GameState.NAME_INPUT && playerNameInput.length === 3) {
+        insertHighScore(playerNameInput, score, playerRank);
+        playerNameInput = '';
+        setState(GameState.LEADERBOARD);
+    }
+}
+
+// ===== RAIN MODE TOGGLE =====
+function toggleRainMode() {
+    rainMode = !rainMode;
+    const video = document.getElementById('bg-video');
+
+    if (rainMode) {
+        document.body.classList.add('rain-mode');
+        video.play();
+    } else {
+        document.body.classList.remove('rain-mode');
+        video.pause();
+    }
+
+    // Update menu display if currently on menu
+    if (currentState === GameState.MENU) {
+        setState(GameState.MENU);
+    }
+}
 
 function handleSpacePress() {
     if (currentState === GameState.MENU) {
@@ -195,28 +364,55 @@ function setState(newState) {
     switch (newState) {
         case GameState.MENU:
             messageEl.classList.remove('hidden');
-            messageContent.innerHTML = `
-                <h1>Inverted Crossy Road</h1>
-                <p>Press <strong>SPACE</strong> to Start</p>
-                <div class="controls">
-                    <p><strong>↑↓</strong> Move Forward/Backward</p>
-                    <p><strong>←→</strong> Change Lanes</p>
-                </div>
-                <button class="leaderboard-btn" onclick="handleLeaderboardKey()">LEADERBOARD (W)</button>
-            `;
+            const rainStatus = rainMode ? 'ON' : 'OFF';
+            const rainBtnText = rainMode ? 'STOP RAIN' : 'MAKE IT RAIN';
+            if (isTouchDevice) {
+                messageContent.innerHTML = `
+                    <h1>Inverted Crossy Road</h1>
+                    <p><strong>TAP</strong> to Start</p>
+                    <div class="controls">
+                        <p><strong>Tap</strong> Move Forward</p>
+                        <p><strong>Swipe ←→</strong> Change Lanes</p>
+                        <p><strong>Swipe ↓</strong> Move Backward</p>
+                        <p><strong>🌧️</strong> Toggle Rain</p>
+                    </div>
+                    <button class="leaderboard-btn" onclick="handleLeaderboardKey()">LEADERBOARD</button>
+                `;
+            } else {
+                messageContent.innerHTML = `
+                    <h1>Inverted Crossy Road</h1>
+                    <p>Press <strong>SPACE</strong> to Start</p>
+                    <div class="controls">
+                        <p><strong>↑↓</strong> Move Forward/Backward</p>
+                        <p><strong>←→</strong> Change Lanes</p>
+                        <p><strong>R</strong> ${rainBtnText}</p>
+                    </div>
+                    <button class="leaderboard-btn" onclick="handleLeaderboardKey()">LEADERBOARD (W)</button>
+                `;
+            }
             break;
         case GameState.PLAYING:
             messageEl.classList.add('hidden');
             break;
         case GameState.GAME_OVER:
             messageEl.classList.remove('hidden');
-            messageContent.innerHTML = `
-                <h1>Game Over!</h1>
-                <p>Final Score: <strong>${score}</strong></p>
-                <p>Distance: <strong>${distance}m</strong></p>
-                <p style="margin-top: 30px;">Press <strong>SPACE</strong> to Restart</p>
-                <button class="leaderboard-btn" onclick="handleLeaderboardKey()">LEADERBOARD (W)</button>
-            `;
+            if (isTouchDevice) {
+                messageContent.innerHTML = `
+                    <h1>Game Over!</h1>
+                    <p>Final Score: <strong>${score}</strong></p>
+                    <p>Distance: <strong>${distance}m</strong></p>
+                    <p style="margin-top: 30px;"><strong>TAP</strong> to Restart</p>
+                    <button class="leaderboard-btn" onclick="handleLeaderboardKey()">LEADERBOARD</button>
+                `;
+            } else {
+                messageContent.innerHTML = `
+                    <h1>Game Over!</h1>
+                    <p>Final Score: <strong>${score}</strong></p>
+                    <p>Distance: <strong>${distance}m</strong></p>
+                    <p style="margin-top: 30px;">Press <strong>SPACE</strong> to Restart</p>
+                    <button class="leaderboard-btn" onclick="handleLeaderboardKey()">LEADERBOARD (W)</button>
+                `;
+            }
             break;
         case GameState.LEADERBOARD:
             messageEl.classList.remove('hidden');
@@ -455,7 +651,11 @@ function renderLeaderboardHTML() {
     }
 
     html += '</div>';
-    html += '<p class="leaderboard-hint">Press <strong>W</strong> or <strong>ESC</strong> to go back</p>';
+    if (isTouchDevice) {
+        html += '<p class="leaderboard-hint"><strong>TAP</strong> to go back</p>';
+    } else {
+        html += '<p class="leaderboard-hint">Press <strong>W</strong> or <strong>ESC</strong> to go back</p>';
+    }
     html += '</div>';
     return html;
 }
@@ -467,12 +667,35 @@ function renderNameInputHTML() {
     html += `<p class="your-score">YOUR SCORE: <strong>${score}</strong></p>`;
     html += `<p class="your-rank">RANK: <strong>#${playerRank}</strong></p>`;
     html += '<p class="enter-initials">ENTER YOUR INITIALS:</p>';
-    html += `<div class="name-input">[ <span class="name-chars">${displayName}</span> ]</div>`;
-    if (playerNameInput.length < 3) {
-        html += '<p class="input-hint">Type A-Z</p>';
+
+    if (isTouchDevice) {
+        // Show on-screen keyboard buttons for mobile
+        html += `<div class="name-input">[ <span class="name-chars">${displayName}</span> ]</div>`;
+        html += '<div class="touch-keyboard">';
+        const rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+        rows.forEach(row => {
+            html += '<div class="keyboard-row">';
+            row.split('').forEach(letter => {
+                html += `<button class="key-btn" onclick="handleTouchKeyPress('${letter}')">${letter}</button>`;
+            });
+            html += '</div>';
+        });
+        html += '<div class="keyboard-row">';
+        html += '<button class="key-btn key-special" onclick="handleTouchBackspace()">DEL</button>';
+        if (playerNameInput.length === 3) {
+            html += '<button class="key-btn key-special key-enter" onclick="handleTouchEnter()">OK</button>';
+        }
+        html += '</div>';
+        html += '</div>';
     } else {
-        html += '<p class="input-hint">Press <strong>ENTER</strong> to confirm</p>';
+        html += `<div class="name-input">[ <span class="name-chars">${displayName}</span> ]</div>`;
+        if (playerNameInput.length < 3) {
+            html += '<p class="input-hint">Type A-Z</p>';
+        } else {
+            html += '<p class="input-hint">Press <strong>ENTER</strong> to confirm</p>';
+        }
     }
+
     html += '</div>';
     return html;
 }
@@ -1634,6 +1857,7 @@ function gameLoop(timestamp) {
 // ===== INITIALIZATION =====
 function init() {
     setupCanvas();
+    setupTouchHandlers();
     initLeaderboard();
     setState(GameState.MENU);
     requestAnimationFrame(gameLoop);
